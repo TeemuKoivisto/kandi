@@ -1,0 +1,387 @@
+\documentclass[finnish]{tktltiki2}
+% Remove widow and orphan lines
+\clubpenalty=10000
+\widowpenalty=10000
+
+% Remove hyphenation
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=1000000
+\hbadness=1000000
+
+
+% tktltiki2 automatically loads babel, so you can simply
+% give the language parameter (e.g. finnish, swedish, english, british) as
+% a parameter for the class: \documentclass[finnish]{tktltiki2}.
+% The information on title and abstract is generated automatically depending on
+% the language, see below if you need to change any of these manually.
+%
+% Class options:
+% - grading                 -- Print labels for grading information on the front page.
+% - disablelastpagecounter  -- Disables the automatic generation of page number information
+%                              in the abstract. See also \numberofpagesinformation{} command below.
+%
+% The class also respects the following options of article class:
+%   10pt, 11pt, 12pt, final, draft, oneside, twoside,
+%   openright, openany, onecolumn, twocolumn, leqno, fleqn
+%
+% The default font size is 11pt. The paper size used is A4, other sizes are not supported.
+%
+% rubber: module pdftex
+
+% --- General packages ---
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsfonts,amsmath,amssymb,amsthm,booktabs,color,enumitem,graphicx}
+\usepackage[pdftex,hidelinks]{hyperref}
+
+\usepackage{setspace}
+\onehalfspacing
+
+% Automatically set the PDF metadata fields
+\makeatletter
+\AtBeginDocument{\hypersetup{pdftitle = {\@title}, pdfauthor = {\@author}}}
+\makeatother
+
+% --- Language-related settings ---
+%
+% these should be modified according to your language
+
+% babelbib for non-english bibliography using bibtex
+\usepackage[fixlanguage]{babelbib}
+\selectbiblanguage{finnish}
+
+% add bibliography to the table of contents
+\usepackage[nottoc]{tocbibind}
+% tocbibind renames the bibliography, use the following to change it back
+\settocbibname{Lähteet}
+% Use numbers instead of abbreviations for citations
+%\usepackage[numbers]{natbib}
+
+% --- Theorem environment definitions ---
+
+\newtheorem{lau}{Lause}
+\newtheorem{lem}[lau]{Lemma}
+\newtheorem{kor}[lau]{Korollaari}
+
+\theoremstyle{definition}
+\newtheorem{maar}[lau]{Määritelmä}
+\newtheorem{ong}{Ongelma}
+\newtheorem{alg}[lau]{Algoritmi}
+\newtheorem{esim}[lau]{Esimerkki}
+
+\theoremstyle{remark}
+\newtheorem*{huom}{Huomautus}
+
+
+% --- tktltiki2 options ---
+%
+% The following commands define the information used to generate title and
+% abstract pages. The following entries should be always specified:
+
+%\title{Ongelmat ohjelmointiprosessissa ja niiden ratkaiseminen}
+\title{Skaalautuva palvelinarkkitehtuuri konteilla ja konttihallintajärjestelmillä}
+\author{Teemu Koivisto}
+\date{\today}
+\level{Kandidaatintutkielma}
+\abstract
+{Suurten hajautettujen järjestelmien hallinnassa on viime vuosina tapahtunut murros, jossa järjestelmiä on yritetty pilkkoa ja automatisoida pienimmiksi paloiksi joita voidaan hallinnoida tehokkaammin. Virtuaalikonepohjaiset palvelimet ovat siirtyneet konttipohjaisiksi ja näiden hallinnoimiseen on kehitetty uusia järjestelmiä hallinnoimaan kasvavaa kompleksisuutta.
+
+Konttijärjestelmien käyttöönotto ei kuitenkaan ole triviaalia ja perusteet sen käytölle on hyvä ymmärtää. Käyn tässä tutkielmassa läpi konttijärjestelmien hallinointiin liittyviä teknologioita kuten kontteja, konttihallinnointijärjestelmiä ja sen sisäisiä rakenteita (design patterns). Myös selvitän lyhyesti miten järjestelmät voidaan ottaa käyttöön palveluntarjoajilla kuten AWS tai GCP.
+}
+
+% The following can be used to specify keywords and classification of the paper:
+
+\keywords{hajautetut järjestelmät, kontti, konttihallintajärjestelmä, Docker, Kubernetes}
+
+% classification according to ACM Computing Classification System (http://www.acm.org/about/class/)
+% This is probably mostly relevant for computer scientists
+% uncomment the following; contents of \classification will be printed under the abstract with a title
+
+% "ACM Computing Classification System (CCS):"
+% CCS →  Social and professional topics →  Professional topics →  Computing profession →  Assistive technologies
+
+\classification{C.2.1 [Computer systems organization]: Architectures}
+
+% If the automatic page number counting is not working as desired in your case,
+% uncomment the following to manually set the number of pages displayed in the abstract page:
+%
+% \numberofpagesinformation{16 sivua + 10 sivua liitteissä}
+%
+% If you are not a computer scientist, you will want to uncomment the following by hand and specify
+% your department, faculty and subject by hand:
+%
+%\faculty{Matemaattis-luonnontieteellinen}
+%\department{Tietojenkäsittelytieteen laitos}
+%\subject{Tietojenkäsittelytiede}
+%
+% If you are not from the University of Helsinki, then you will most likely want to set these also:
+%
+%\university{Helsingin Yliopisto}
+%\universitylong{HELSINGIN YLIOPISTO --- HELSINGFORS UNIVERSITET --- UNIVERSITY OF HELSINKI} % displayed on the top of the abstract page
+%\city{Helsinki}
+
+
+\begin{document}
+
+% --- Front matter ---
+
+\frontmatter      % roman page numbering for front matter
+
+\maketitle        % title page
+\makeabstract     % abstract page
+
+\tableofcontents  % table of contents
+
+% --- Main matter ---
+
+\mainmatter       % clear page, start arabic page numbering
+
+\section{Johdanto}
+
+Hajautetut järjestelmät ovat olleet nykyisen internetin kehityksen keskiössä kun yhä useammat palvelut ovat siirtyneet paikallisilta tietokoneilta internettiin/pilveen/xxx. Näiden järjestelmien hallinta on kuitenkin kasvanut huomattavan vaikeaksi jonka seurauksena on etsitty parempia tapoja hallinnoida tuota kasvavaa kompleksisuutta. Viime vuosina suureen huomioon on niistä tullut kontit ja konttihallintajärjestelmät kuten Docker ja Kubernets (viite?xxx). Nämä palvelut ovat mahdollistaneet yhä suurempien järjestelmien hallinnoinnin skaalautuvalla tavalla.
+
+Käyn tämän kehityksen askeleet aina sen alkuvuosista nykytilanteeseen asti tutkimalla järjestelmien eri osa-alueita. Lähteiden harvauden vuoksi en löytänyt niin konkreettisia aiheita kuin olisin aluksi ehkä halunnut mutta pääpiirteittäin löysin kaikista jotain.
+
+Iso kysymys nykykehittäjillä on hajautettuja järjestelmiä luodessa (viite x) miten järjestelmä luodaan. Aihe on laaja ja moniuloitteinen mutta kehityksen kärjessä on nykyään olleet kontit ja niiden hallinnointi. Useat valmiitkiin ratkaisut (kuten Heroku?x?) pohjautuvat myös kontteihin. Konttien avulla järjestelmät voidaan helposti kapseloida ja valmistaa alustasta riippumattomaksi kokonaisuudeksi joka voidaan ottaa käyttöön (deploy) pilvipalvelussa. Tämän helppouden kuitenkin mahdollistaa vain vuosia jatkunut kehitystyö kontti-järjestelmien takana jota käyn läpi.
+
+Suuremassa mittakaavassa pelkät kontit ovat usein riittämättömiä ja silloin konteille halutaan oma hallinnointijärjestelmä kuten Kubernetes. Senkin käytössä on etunsa ja haittansa vaikka sen tyyppiset järjestelmät ovat kehittyneet hurjasti viimeisen kymmenen vuoden aikana (viite?x). 
+
+\section{Palvelinarkkitehtuureista}
+\label{section:tokatk}
+
+\subsection{Historiaa}
+
+Aluksi oli mainframe-tietokoneet, sitten tuli kotikoneet ja kun internet niin ensimmäiset oikeat palvelimet. Näin syntyi tarve pystyttää suuria määriä identtisesti toimivia käyttöjärjestelmiä, joissa pyöri samat ohjelmat. Kuitenkin järjestelmien kasvaessa laitteistojen tai ohjelmiston päivitykset muodostuivat alati raskaammaksi tehdä epäjohdonmukaisuuksien (inconsistency) syntyessä yhteensopimattomien versioiden tai laitteistoriippuvaisen ohjelma-logiikan muuttuessa.
+
+Ensimmäisiä tapoja ratkaista ongelma olivat virtuaalikoneet(?) joista IBM ja xxx loivat ensimmäiset versiot vuonna peruna. Virtualisointi oli yhä löyhää eikä kaikkia ongelmia pystytty heti korjata mutta se oli edistysaskel käsin tehtäviin ohjelmistopäivitykseen verrattuna (?)
+
+Ohjelmistoina palvelimissa toimi tuolloin usein ASP.NET tai PHP tai Java.
+
+2000-luvun taitteessa alettiin luomaan ensimmäisiä konteiksi kutsuttavia ratkaisuja joissa virtualisointi oli virtuaalikoneeseen verrattuna kevyeämpää (?) / käytti hyväksi ytimen tarjoamia rajapintoja täysin virtualisoidun tiedostojärjestelmän sijaan?. Mahdollisti useiden virtuaaliympäristön ajamisen samalla palvelimella ilman suuria yleiskustannuksia (overhead).
+
+Myös oli skaalautuvuus ongelmia? Hyper-skaalautuvat yritykset kuin Google kohtasivat nämä ongelmat ennen muita joten he saivatkin varaslähdön ongelmien ratkaisevien ohjelmistojen kehitykseen.
+
+\subsection{Hmm hmm}
+
+Normaali web-pohjainen palvelinarkkitehtuuri (hajautettu järjestelmä x?) koostuu useimmiten web-palvelimesta, app-palvelimesta ja tietokantapalvelimesta.(kuva x, viite y?) Webpalvelin hoitaa staattisten dokumenttien palvelimisen käyttäjille kun taas app-palvelin luo kaiken dynaamisen sisällön ja vastaanottaa API-rajapinta pyynnöt. Taustalla tietokantapalvelin pitää yllä järjestelmän tilaa useimmiten sisäverkossa internetin/häkkäreiden/x ulottumattomissa.
+
+Vuosina x ja y yleisin tämänkaltainen palvelu/x oli LAMP-teknologioilla kehitetty xx viite. LAMP koostui siis Linux-pohjaisesta käyttöjärjestelmästä (virtuaalikoneesta?x), Apache webpalvelimesta, MySQL tietokannasta ja PHP-ohjelmointikielellä toteutetusta app-palvelimesta x. (kuva !) Järjestelmät olivat suosittuja niiden robustiuden ja helpon kehitettävyyden ja ylläpidon takia (viite x). Kuitenkin useimmiten järjestelmien laajentuessa syntyi odottomattomia vaikeuksia kuten tietokantapalvelimen pirstominen (sharding) ja resurssien skaalaminen syntyvän liikenteen pohjalta. Jos esimerkiksi palvelun käytössä oli suuret erot kellonaikoihin verrattuna saattoi hukkakäynti muodostua suureksi kuluksi niiden käytössä (viite x). Skaalautuvuus oli myös ongelma kun järjestelmän monimutkaisuus kasvoi ja palvelimien jouduttiin päivittämään ja pystyttämään yhä useampiin paikkoihin. Lopulta suuren järjestelmän ylläpito vei suuren määrän kehittäjätunteja ja niiden herkkyyden takia ne saattoivat kaatua pitkiksikin ajanjaksoiksi tuottaen ei-haluttuja tappioita ja vaivaa xx.
+
+Järjestelmien automatisoinnin vuoksi kehitettiinkin monia palveluita kuten x ja y. Niiden avulla pystyttiin yhtäaikaisesti silloin monitoroimaan ja käskyttämään kaikkia palvelimia ja virhehallinta oli helpompaa xxx. Kuitenkin tällöinkin palveluiden päivittämisessä ja resurssien hallinnoinnissa oli suuria vaikeuksia koska palvelut olivat hyvin riippuvaisia niiden alla olevasta käyttöjärjestelmästä ja itse palvelimesta. Myös skaalautuvuus oli edelleen ongelma koska järjestelmiä ei voitu noin alasajaa ja uudeleen luoda automaattisesti. x
+
+Näiden ongelmien ratkomiseen silloin kehitettiin tiukempaa virtualsointia ja tarkempaa käyttöoikeuksien rajausta tukevaa teknologiaa jota alettiin kutsua konteiksi (container). viite x. Ne syntyivät alunperin Googlen sisäisiä tarpeita varten ja ison osan alkuperäisestä cgroup-koodista kontributoi Linux-kerneliin juuri Google. Näiden hallinnointia varten myös kehitettiin uudenlaisia konttihallinnointijärjestelmiä joista Google kehitti ensimmäisenä omansa Borgin ja Omegan muodossa. Ne kuitenkin olivat pelkässä Googlen sisäisessä käytössä ja ovat edelleen minkä vuoksi Google myöhemmin kehitti täysin uuden järjestelmän joka oli alusta asti suunniteltu vapaan lähdekoodin projektiksi. Tämän järjestelmän nimi oli Kubernetes jonka myöhemmin Google luovutti organisaatioille x ja joka on yhä ylivoimaisesti suosituin konttihallintajärjestelmä. viite x
+
+öö myös tehokkaampia palvelmia ja pilvipalveluiden suuri kasvu kuten AWS
+
+Näiden teknologioiden taustalla on ollut suuri määrä erilaisia innovaatioita ja käytenteitä jotka ovat mahdollistaneet niiden nykyisen muodon joista paremman virtualisoinnin kehittäminen on vain yksi osa. Toisia ovat hajautettujen järjestelmien hallinnointiin liittyvät parannukset ja käytenteiden jalostuminen kuten x. (toinen suuri pala on ollut) Suuri määrä insinöörityötunteja ja rahaa on käytetty suosituimman kontti-toteutuksen, Dockerin, kehitykseen jonka omistaa samanniminen yhtiö. viite x. Myös algoritmipuolella on kehitetty tehokkaampia algoritmeja hajautettuihin järjestelmiin kuin myös käytetyt resurssit ovat aivan eri mittakaavassa kuin 2000-vuoden alussa.
+
+\section{Kontit}
+
+\subsection{Johdanto}
+
+Konteilla tarkoitetaan alunperin Linuxille luotua virtuaalisaation muotoa jossa käyttäjäprosessi eristetäään ytimestä nimiavaruuksien ja kontrolliryhmien avulla.
+
+Eli nyt lähteettömästi kirjoittaen: Linux koostuu ytimestä ja käyttäjäprosesseista (user land) ja käyttäjäprosessien on mahdollista kutsua ytimen järjestelmäkutsuja sille annetuilla oikeuksilla. Kuitenkin eristettävyyden takia on useiden samanaikaisten käyttäjäprosessien hallinta vaikeaa ja niiden oikeuksien asettaminen hallitulla tavalla (ei kaikille root-oikeuksia). Myös prosessien eristäminen toisista prosesseista on vaikeaa ja etteivät riistä resursesseja toisiltaan (starvation).
+
+Ratkaisuksi tähän luotiin jo kauan sitten Unixin aikoihin "chroot":in avulla sekä FreeBSD:ssä vankiloilla (jail) prosessien eristys. Chroot muokkasi prosessin root-hakemistoa sille ja sen lapsille näin "vangiten" prosessin tietyille oikeuksille ja alueelle järjestelmässä.
+
+Parempaa eristettävyyttä haluttaessa luotiin "cgroup":it ytimeen jotka mahdollistivat tarkemman resurssien jaon (CPU, muisti, I/O, kaista) prosesseille. Ne myös mahdollistivat nimiavaruuksien eristämisen jolloin kyseiset prosessit näkyiväät käyttöjärjestelmässä täysin omina kokonaisuuksinaan (kuin toisina käyttöjärjestelminä muttei kuitenkaan). Näihin perustui Linux Containers (LXC) teknologia jolla luotiin ensimmäinen Linux-pohjainen kontti-toteutus.
+
+Niitä voidaan ajatella kevyenä virtualisaationa verrattuna virtuaalikoneisiin jotka siis virtualisoivat koko käyttöjärjestelmän isäntä-käyttöjärjestelmän päälle. Hyödyntämällä suoraan Linux-ytimen järjestelmäkutsuja konttien ei tarvitse ylläpitää omaa käyttöjärjestelmää ja näin pääsevät vähemmällä ja säästävät resursseja kun järjestelmäkutsujen ei tarvitse kulkea kahden käyttöjärjestelmän lävitse.
+
+Selvästi kuitenkin vaikeimpana asiana on konttien eristäminen muusta käyttöjärjestelmästä niin että ne eivät saa liikaa oikeuksia tai riistä resursseja muulta järjestelmältä.
+
+Edut niissä on melkein samat kuin missä tahansa virtuaalisaatiossa eli sovelluksia voidaan pitää omissa laatikoissaan, konteissa, eristettyinä muusta käyttöjärjestelmästä. Näin niillä voi olla eri versioita kirjastoistaan tai käyttöjärjestelmästä sekä ne voidaan helposti siirtää palvelimelta toiselle. Kontit kuitenkin tarjoavat lisäetuina keveyden VM:iin verrattuna, suhteellisen kompaktin koon, helpon tavan luoda ja siirtää kontteja (image registry, DockerHub) sekä standardoidun tavan luoda sekä hallinnoida noita ympäristöjä eli kontteja.
+
+Vaikka konteilla on joitain tehokkuusetuja virtuaalikoneisiin verrattuna ehkä tärkeimpänä seikkana on enemmän ei-teknisest seikat kuten ohjelmistojen kehitettävyyden helppous sekä ohjelmoijien taakan vähentäminen palvelinympäristöjen pystyttämisen kanssa. Myös suurten kokonaisuuksien hallinnointi on helpompaa konttien avulla ja konttienhallintajärjestelmillä jotka vaikka ovat monimutkaisia ovat paras tapa valtavien, hyper-skaalan palvelinympäristöjen ylläpidossa (esim. Google, Amazon).
+
+Siirtymä virtuaalikoneista kontteihin on verrattavissa samaan muutoksen joka tapahtui olio-ohjelmoinnin yleistyessä 90-luvulla Java kehityksen kärjessä. Vaikka näin jälkeenpäin Java vaikuttaakin kankealta ja verboosilta kieleltä niin oli se valtava edistys sen hetkiseen tapaan kehittää ohjelmistoja suurissa organisaatioissa. OOP:n tuoma järjestelmällisyys ja eristettävyys luokkien ollessa omia kokonaisuuksia teki suurtenkin ohjelmistojen kehittämisestä mahdollista vaikka kehittäjien vaihtuvuus saattoi olla projekteissa suurta./ OOP:n tarjoama standardi tapa kehittää ohjelmistoja luokkien avulla blaa blaa.
+
+Samaa murrosta voidaan ehkä kutsua termille kontteistamainen (containerization) ja sen tekemää muutosta (palvelimien?) kehittämisessä siirtymissä laitteisto-keskeisestä sovellus-keskeiseksi. Ne myös antavat luonnostaan edelletykset mikropalvelu-arkkitehtuurien luomiselle. (jotka myös ovat taas hyväksi organisaatioille joissa järjestelmiä kehittää hyvin hetero-geeninen joukko).
+
+Vanhat höpinät: Kontit syntyivät Linuxin ytimen eristettävyyden parantuessa. Ne olivat sivutuote kun kontrolliryhmien (control groups) mahdollistamalle eritykselle jolloin useita käyttäjäprosesseja kyettiin ajamaan samanaikaisesti eristämällä kuitenkin niiltä asiota... Myöhemmin tulivat nimiavaruudet (name spaces) ja xxx. Tämän johdosta luotiin jo ensimmäiset konttien nimellä kulkevat ratkaisut kuten Docker ja LXC. Refe myös Dockerin johonkin paperiin? \cite{borg-omega-kubernetes}
+
+Tämän jälkeen kontit kehittyivätkin täysin erillisenä kokonaisuutena, joka toimi Linux kernelin tarjoamalla socket? rajapinnalla tarjoten rajapinnan kernelin ja konttien välille kapseloiden kuitenkin kontit hyvin hermeettisesti muusta käyttöjärjestelmästä.
+
+Suosituin tämän hetkisistä kontti-implentaatioista on LXC:iin perustuva Docker, jonka nimeä kantava yritys perustettiin vuonna 2013.\cite{docker}
+
+Edut: riippuvuuksien hallinta -> konfliktoivat versiot voivat pyöriä omissa konteissaan (sama kuin virtuaalikoneissa...)
+
+Käyttäjärjestelmä riippumattomuus -> voi vaihtaa palvelimia kunhan on vain Docker OS asennettu (sama kuin VM edelleen..)
+
+Siirtymä virtuaalikoneista kontteihin muutti sovelluskehityksen hajautetuissa järjestelmissä laitteistopohjaisista sovelluspohjaisiksi (application-oriented) näin mahdollistaen entistä paremman kehittäjäkokemuksen ja helpomman muokattavuuden. Laitteistoon littyvien ongelmien/inconsistency sijaan he pystyivät keskittymään pelkästään itse sovellusten kehittämiseen näin vähäntäen työmääräänsä ja parantaen järjestelmien ylläpidettävyyttä?/harmaita hiuksia.
+
+Kontit myös tarjosivat tehokkaamman laitteistokäyttöasteen monien samanaikaisten eristettyjen sovellusten toimiessa samanaikaisesti palvelimella. Kontit luonnostaan kannustavat mikropalvelu-arkkitehtuurin luomiseen joka puolestaan parantaa sovellusten ylläpidettävyyttä ja viansietokykyä sovellusten osien ollessa eristettyinä toisista.
+
+\subsection{Toimintatapa}
+
+Että vertaan tässä Dockerin toimintapaa muihin virtualisointitapoihin Docker-artikkelin pohjalta.
+
+Both containers and VMs are virtualization tools. On the VM side, a hypervisor makes siloed slices of hardware available. There are generally two types of hypervisors: "Type 1" runs directly on the bare metal of the hardware, while "Type 2" runs as an additional layer of software within a guest OS. While the open-source Xen and VMware's ESX are examples of Type 1 hypervisors, examples of Type 2 include Oracle's open-source VirtualBox and VMware Server. Although Type 1 is a better candidate for comparison to Docker containers, I don't make a distinction between the two types for the rest of this article.
+
+Containers, in contrast, make available protected portions of the operating system—they effectively virtualize the operating system. Two containers running on the same operating system don't know that they are sharing resources because each has its own abstracted networking layer, processes and so on. \cite{docker}
+
+Since hypervisor-based virtualization provides access to hardware only, you still need to install an operating system. As a result, there are multiple full-fledged operating systems running, one in each VM, which quickly gobbles up resources on the server, such as RAM, CPU and bandwidth.
+
+Containers piggyback on an already running operating system as their host environment. They merely execute in spaces that are isolated from each other and from certain parts of the host OS. This has two significant benefits. First, resource utilization is much more efficient. If a container is not executing anything, it is not using up resources, and containers can call upon their host OS to satisfy some or all of their dependencies. Second, containers are cheap and therefore fast to create and destroy. There is no need to boot and shut down a whole OS. Instead, a container merely has to terminate the processes running in its isolated space. Consequently, starting and stopping a container is more akin to starting and quitting an application, and is just as fast.
+
+Isolation for Performance and Security
+
+The bottom line is that virtualization and containers exhibit some similarities. Initially, it helps to think of containers as very lightweight virtualization. However, as you spend more time with containers, you come to understand the subtle but important differences. Docker does a nice job of harnessing the benefits of containerization for a focused purpose, namely the lightweight packaging and deployment of applications.
+
+\subsection{Kontti implementaatioista}
+
+CONTAINER IMPLEMENTATION COMPARISON (löyty myös taulukko, vähän meh ehkä)
+
+Linux Containers (LXC) are light weight kernel containment implementation supported on few flavors or Linux like
+Ubuntu and Oracle Linux.
+
+Docker is a daemon which provides ability to manage Linux containers as self contained images. It utilizes LXC (Linux Containers) for the container implementation and adds image management and Union File System capability to it.
+
+Google lmctfy provides a resource configuration API which simplifies container management. It provides intent based configuration without the need to understand cgroups and removes the difficulties of unstable LXC APIs. It also improves the resource sharing and can support performance guarantees.
+
+OpenVZ uses a modified Linux Kernel with a set of extensions. OpenVZ manages multiple physical and Virtual
+servers, by using dynamic realtime partitioning. Like containers, OpenVZ has little overhead and offers higher performance and can be managed better than Hypervisor technologies. Just like other containers, OpenVZ uses cgroups and Namespaces. OpenVZ additionally provides templates that help in precreated Virtual environments.
+
+\cite{virtualization-vs-containerization}
+
+\subsection{Konttien toimintavasta}
+
+Vakuuttavassa RedHatin blogi-artikkelissa kerrotaan aika yksityiskohtaisesti ja selkeästi kuinka kontit toimivat. 
+Eli siinä kerrotaan miten kontit toimivat oman sekä kernelin nimiavaruuksien päällä. Myös mistä Docker-kuvat koostuvat. Ja että konttiprosessit eroavat normaali käyttäjäprosesseista niin, että ne ajetaan clone() -järjestelmä kutsulla kun taas käyttäjäprosessit fork() -kutsulla.
+
+Lopuksi siinä kerrotaan vielä lyhyesti eri konttien käyttötavoista (design pattern).
+
+Artikkelin lopussa on vielä joukko linkkejä joissa kerrotaan kanssa vielä lisää konteista. Esimerkiksi mainitaan kuinka Open Container Initiative (OCI) on yhtenäistänyt kuva-formaatin konteille mikä on hienoa.
+
+En tiedä kuinka hyvä lähde mutta opin paljon!\footnote{\url{https://developers.redhat.com/blog/2018/02/22/container-terminology-practical-introduction/}}
+
+\subsection{Konttien ja virtuaalikoneiden tehokkuusvertailu}
+
+On tehty useita tutkimuksia joissa konttien ja virtuaalikoneiden välisiä tehokkuus-eroja tarkastellaan mutta joiden vertailtuvuus käytännön sovellutuksiin on jokseenkin vaikeatulkintaista. 
+
+Raskaassa CPU-käytössä asiat ovat vaikeita ymmärtää... artikkeli: Measuring Docker Performance: What a mess!!! \cite{docker-performance}
+
+Kuitenkin toisessa tutkimuksessa kontit ovat olleet huomattavan paljon tehokkaampia: Performance comparison between Linux containers and virtual machines -artikkeli \cite{containers-vs-vms}
+
+Tämä ristiriitainen tulos kuitenkin ehkä selittyy sillä, että tässä(viittaus) tutkimuksessa käytettiin hyvin kapea-alaista suorituskyky-vertailua verrattuna toisen(viite) tutkimuksen paljon laaja-alaisempaan vertailuun.
+
+Käytössä siinä oli Ubuntu 14.04 server operating system each having 2GB RAM is used for ec2 virtual machines and for hosting Docker on physical servers
+
+Also, it is found that the virtual machine does not perform as consistently as Docker, even when it has physical memory accessible. When the number of links increased further than the server could handle using physical memory, the host starts swapping memory between its hard disk and physical memory.
+
+In this experiment both virtual machine and container environments runs a load balanced WordPress application. Jmeter is used to trigger the scaling by increasing the CPU utilization above 80\% for scaling up the virtual machine. Same Jmeter is used for sending concurrent request to front end WordPress application to trigger container scaling using kubernetes cluster manager.
+
+The results show that the time taken by the container to scale and process the service request is very much less than the time taken to scale a new virtual machine to handle the request. The calculated time for scaling up virtual machine is three minutes while a container took only eight seconds to scale up and handle the request. This is a big difference in scalability point of view. Containers outperformed virtual machines by 22x times faster in scalability as shown in
+
+The macro benchmarks by comparing virtual machines and Linux containers are shown in this paper. Containers have outperformed virtual machines in terms of performance and scalability. Because of its better scalability and resource utilization, containers can be used for application deployments to reduce resource overhead. However, there are use cases where virtual machines would be a better fit than Linux containers. One of the use cases is running applications with business critical data. Containers run with root privileges and
+
+Hypervisors vs. Lightweight Virtualization: A Performance Comparison
+
+Container-based solutions and others emerging systems are challenging traditional hypervisor based virtual machines in cloud computing. The new technologies are more lightweight, thus facilitating more dense deployment of services.
+
+The level of overhead introduced by containers can be considered almost negligible. Taking all of the differences between LXC and Docker into account, we confirm that containers perform well, albeit the versatility and ease of management is paid in terms of security. As further work, it would be useful to repeat the measurements, e.g., with the recently announced “Linux Container Daemon” (LXD) [40], a new type of hypervisor that claims to offer improved support for security without losing the performance benefits. in general, security and isolation aspects of containers deserve a more thorough analysis.\cite{hypervisors-vs-lightweight-virtualization}
+
+\subsection{Mielipiteitä kontteja vastaan}
+
+Tai jotain. Hacker Newsissä oli aika vakuuttavaa settiä jota en ehkä voi käyttää viitteenä mutta ehkä mainitsen keskustelun sävyn jotenkin että "Kuitenkin kaikki eivät ole vakuuttuneita konttien tai Dockerin käyttökelpoisuudesta ja näkevät sen vain monimutkaisempana tapana luoda käyttäjä-prosesseja\footnote{\url{https://news.ycombinator.com/item?id=16445467}}
+
+Siinä myös vittuillaan, että kontit eivät oikeasti ole edes virtuaalisatiota vaikka niitä niin markkinoidaan. Myös turvallisuudesta on puhetta ja kuinka kontit ovat potentiaalisesti erittäin haavoittuvaisia. Anti-pattern jos buildi-skripti korvataan Dockerfilella? Hauska vertaus että Docker on sama kuin Java mikä hyvin vertautuu mitä jäbä tässä \cite{container-design-patterns} sanoi että kontit ovat kuin OOP. Mikä on hyvä asia isoille organisaatioille mutta myös huono asia että kaikesta tulee ylimonimutkaista palikkakoodia.
+
+Ehkä loppuyhteenvetona tuo RedHatin artikkelin toteamus vai oliko joku muu, että kontit tulisivat olla paloja systeemistä mutteivät itse aivoja eli vähän kuin kirjastoja jotka eivät lopulta kuitenkaan toteuta sitä sovellusta.
+
+Muutenkin konttien edut ovat enemmän palvelinarkkitehtuurin standardoimisessa ja organisaatioiden omien, joskus epätehokkaiden, tiimien palikkoina jotka toimivat omina osinaan. Siis tarkoittaen mikropalveluarkkitehtuuria joka siis tuohon ympäristöön juuri sopii.
+
+Kuitenkin tuo HN on aikamoista harmaaparta sys-adminien valitusta. Että teknisesti se ei juu ole mikään uusi juttu mutta on toimiva standardi joka yhtenäistää asioita mikä on sen takia hyvä asia. Ei kaikkea voi koodata C:llä...
+
+\section{Konttihallintajärjestelmät}
+
+\subsection{Johdanto}
+
+Konttien hallintaa tarvittiin oma hallintajärjestelmä koska kontit itsessään eivät sitä tarjonneet. Kehityksen etunenässä oli tuolloin Googlen Borg-konttihallintajärjestelmä joka oli yksi ensimmäisiä lajiaan. Borg perustui taskeille ja allocille jotka vastasivat kontteja ja x konttimoduuleja jotka sisälsivät useampia kontteja yhtenä kokonaisuutena palvelimella.
+
+Borg onnistui xxx jossain eriyttämään kontit omiksi kokonaisuuksiksi joita oli suhteellisen helppo käsitellä. Kuitenkin Googlen käytössä Borgiin kerääntyi iso määrä erilaisia ad-hoc työkaluja jotka monimutkaistivat sen käyttöä suureesti (viite x).
+
+Google kehitti Borgin jälkeen Omegan korjaamaan näitä puutteita ja se xxx.
+
+Näin syntyi sitten Kubernetes joka oli alusta asti suunniteltu olemaan vapaan lähdekoodin projekti sisäisiin Borgiin ja Omegaan verrattuna.
+
+Muita järjestelmiä ovat Docker Swarm, Mesos ym.
+
+\subsection{Borg, Omega ja Kubernetes}
+
+Borg on Googlen sisäiseen käyttöön kehittämä konttienhallintajärjestelmä, joka otettiin käyttöön vuosina 2003-2004 (viite youtube x). Sen alkuperäisenä tarkoituksena oli hallinnoida vain pitkäikäisiä prosessaja ja sarja-ajoja (batch jobs). Mutta vasta Linuxin ydin tarjosi alkoi tarjota parempaa tukea käyttäjä-prosessien ja sarja-ajojen eristämiselle kontrolliryhmien, nimiavaruuksien ja x avulla syntyi ensimmäinen konttien kaltaisten prosessien hallintaan kehittynyt järjestelmä. \cite{borg-omega-kubernetes}
+
+Borg, as it turns out, was not the first cluster and application management tool that the search engine giant created. Google, like all companies, has a mix of batch workloads and long-running service workloads, and it partitioned its clusters physically to support these very different kinds of jobs. A program called Babysitter ran the long-running service jobs (like Web and other infrastructure servers) while another called the Global Work Queue ran the batch jobs like the MapReduce big data analytics framework that inspired Hadoop and that is still used today inside Google. But running these applications on different clusters meant that compute capacity was often stranded, and that was unacceptable when Google was growing explosively a decade ago.\footnote{\url{https://www.nextplatform.com/2016/03/22/decade-container-control-google/}}
+
+Borg kasvoi Googlen käytössä joukoksi erilaisia työkaluja jotka muodostuivat pian vaikeaksi hallinnoida joten tämän vuoksi kehitettiin uusi järjestelmä, Omega, jonka tarkoituksena oli juuri parantaa ohjelmistolaatua ja olemaan konsistempi ja periaattellisempi kuin Borg. \cite{borg-omega-kubernetes}
+
+Omega hyödynsi monia Borgin ominaisuuskia
+
+The isolation and dependency minimization provided by containers have proved quite effective at Google, and the container has become the sole runnable entity supported by the Google infrastructure,
+
+\subsection{Edut}
+
+Kuten kerrottua paransi konttipohjaisuus selvästi palvelimien käyttöastetta kun käyttäjätason prosesseja ei tarvittu kääntää vieraskäyttöjärjestelmästä (guest OS) isäntäkäyttöjärjestelmän (host OS) konekäskyiksi. Se myös oli suoraan yhteydessä levyyn xxx? Konttien eristys... tarjosi jotain. Kontit tarjosivat hermeettisemmän kapseloinnin ohjelmistoympäristölle joka vähensi käyttöjärjestelmä ja laitteistotason riippuvuuksien vaikutusta sovelluksen/ympäristön/kontin toimintaan. Muutos juuri muutti paradigmaa laitepohjaisesta (machine-oriented) sovelluspohjaiseksi (application-oriented).
+
+Kerroppa tästä Modelling performance \& resource management in kubernetes paperista. \cite{kubernetes-performance}
+
+\subsection{Ongelmat}
+
+Konttienhallintajärjestelmissä on kuitenkin yhä iso määrä ongelmia, joihin ei ole löydetty ratkaisua. Konfiguraatio on edelleen ongelma ja se miten ympäristö luodaan konfiguraatio-tiedostoista. Useimmiten automatisaation maksimoimiseksi halutaan kuvata mahdollisimman paljon ympäristöä dynaamisilla arvoilla mutta joka pian johtaa domain-pohjaisen konfiguraatio-kielen keksimiseen joka omaa Turing-vahvuuden. On esitetty että konfiguraatiot tulisi siksi vain pitää pelkkinä data-pohjaisina tiedostoina kuten YAML tai JSON.
+
+Riippuvuuksien hallinta on toinen vaikeaksi esitetty ongelma konttienhallintajärjestelmissä. Kun parvi kasvaa niin konttien väliset riippuvuudet myös. Kun konttien luonti halutaan tehdä automaattisesti niin noiden riippuvuuksien luominen haluttaisiin automatisoida mahdollisimman pitkälle myös. Kuitenkin automattisesti riippuvuuksien hallinta muodostuu vaikeaksi ja raskaaksi työksi, joka vaatii kasvavia määriä työtunteja ja vaikeuttaa xxx ymmärtämistä?
+
+\section{Suunnittelumalleista}
+
+On esitetty, että konttipohjaisissa hajautetuissa järjestelmissä on tapahtumassa samanlainen muutos kuin 80-luvulla kun OOP mullisti ohjelmistokehityksen. Tämän mahdollistaa juuri konttien tarjoama modulaarisuus/muokattavuus (composability) ja laitteistotason riippuvuuksien eristäminen konttien sisällä toimivista applikaatioista.
+
+Näistä suunnittelumalleista (design patterns) on juttui. Design patterns for container-based distributed systems
+ -artikkeli \cite{container-design-patterns}
+
+\section{Pilvipalvelujen tarjoajista}
+
+Suosituin tapa konttijärjestelmän pystyttämiseen on ulkopuolinen pilvipalvelu jotta skaalautuvia resursseja päästään hyödyntämään tehokkaasti. Suurilla osalla pilvipalveluntarjoajista onkin valmiit ratkaisut konttijärjestelmän pystyttämiselle joko Kubernetekseen tai muuhun perustuvalla järjestelmällä.
+
+Suosituimpia pilvipalvelun tarjoajia tämän tutkielman kirjoittamisen aikoihin ovat AWS, Azure, GCP, x (viite x). Näistä perehdyn kahteen: AWS:ään ja GCP:hen.
+
+\subsection{AWS}
+\label{ch:aws}
+
+AWS\footnote{\url{https://aws.amazon.com/}} (Amazon Web Services) on Amazonin pilvipalvelu-yhtiö joka tarjoaa kattavimman palvelin ekosysteemin kaikista tarjoajista tällä hetkellä. Kuitenkin konttihallintajärjestelmissä AWS on ollut muita jäljessä ja esimerkiksi Kubernetes-pohjaisen konttipalvelun AWS toi vasta 2017 lokakuun re:Invent -tapahtumassa kun taas GCP:ssä kyseinen järjestelmä oli ollut jo kaksi vuotta käytössä.
+
+Kuitenkin AWS:n ekosysteemin laajuuden ja kilpailukykyisen hinnoittelun takia se on houkutteleva vaihtoehto konttijärjestelmien luomiselle. AWS:llä on kaksi palvelua joilla tämä voidaan totetuttaa: ECS ja EKS. ECS eli Elastic Container Service on geneerinen xxx. EKS (Elastic Kubernetes Service) taas on suoraan Kubernetekseen pohjautuva palvelu joka mahdollistaa Kubernetes laivueen pystyttämisen sellaisenaan. Mitä etuja se tuo palveluna oman Kubernetes palvelun luomiseen verrattuna on sen käyttöä helpottavat monitorointi ja xxx palvelut.
+
+Käytä referaattina whitepaperia: Docker on AWS - Running Containers in the Cloud \footnote{\url{https://d0.awsstatic.com/whitepapers/docker-on-aws.pdf}}
+
+\subsection{GCP}
+\label{sb:gcp}
+
+\href{https://cloud.google.com/}GCP\footnote{\url{https://cloud.google.com/}} (Google Cloud Platform) on Googlen pilvipalvelu joka pienestä markkina-osuudesta huolimatta on kilpailukykyinen ja varteenotettava vaihtoehto. Erityiseksi GCP:n tekee sen juuri Kubernetekseen erikoistunut palvelu xx jolla on xxx hyvä tuki yo yo.
+
+Kuten AWS kappaleessa... \ref{ch:aws}
+
+% Kommentti!
+
+\subsection{Hintavertailu}
+
+Koska konttijärjestelmien hintojen suora vertailu on jokseenkin mahdotonta niihin liittyivien erillisten palvelujen, sivukulujen ja palvelujen erilaisuuden vuoksi on tämä vertailu enemmänkin suuntaa antava.
+
+Esimerkissä on laskettu vuosittaiset käyttökustannukset 10 kontin palvelinjärjestelmälle joka vastaisi keskisuurta maailmanlaajuista webbisivustoa. Huomioitavaa on myös että hinnat ovat suoraan hintataulukosta xxx mutta esimerkiksi Google tarjoaa vuoden mittaisia sopimuksia xxx joilla hinta on vain 30\% esitetystä.
+
+Joku taulukko hinnoista...
+
+\begin{itemize}
+    \item pointti 1
+    \item pointti 2
+\end{itemize}
+
+\newpage
+\bibliographystyle{babalpha-lf}
+\bibliography{lahteet}
+
+\end{document}
